@@ -1,0 +1,6 @@
+#ifndef __VERSION_H_INCLUDED__
+#define __VERSION_H_INCLUDED__
+
+#define FNSPROXY_VERSION    "$GIT_VERSION"
+
+#endif /* __VERSION_H_INCLUDED__ */
