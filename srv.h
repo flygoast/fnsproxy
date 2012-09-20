@@ -15,7 +15,8 @@ typedef struct server_st {
     int                 daemon;
     char                *dns_addr;
     int                 dns_port;
-    volatile long long  clock;
+    long long           clock;
+    long long           last_check;
     evtent_t            sock;
     event_t             evt;
     dlist               clis;

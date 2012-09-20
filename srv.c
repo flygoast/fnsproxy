@@ -13,6 +13,7 @@
 #define DEFAULT_DNS_PORT        53
 #define DEFAULT_GEO_FILE        "fnsproxy.geo"
 #define DEFAULT_DNS_ADDR        "8.8.8.8"
+#define CRON_INTERVAL           1000    /* ms */
 
 /* global server configure */
 server_t fnsproxy_srv;
@@ -116,5 +117,9 @@ void srv_destroy() {
 
 void srv_cron(void *arg, int event) {
     fnsproxy_srv.clock = mstime();
-    //check_timeout();
+
+    if (fnsproxy_srv.clock - fnsproxy_srv.last_check > CRON_INTERVAL) {
+        fnsproxy_srv.last_check = fnsproxy_srv.clock;
+        check_timeout();
+    }
 }
