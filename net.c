@@ -6,14 +6,18 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include "event.h"
+#include "times.h"
+#include "dlist.h"
 #include "srv.h"
 #include "net.h"
 
 #define MAX_BUFFER_SIZE     2048
+#define READ_TIMEOUT        3000    /* ms */
 
 typedef struct client_st {
     evtent_t            sock;
     struct sockaddr_in  cli_addr;
+    long long           expire_at;
 } client_t;
 
 int create_udp_socket(char *addr, int port) {
@@ -44,6 +48,19 @@ int set_non_block(int fd) {
     return (fcntl(fd, F_SETFL, opt));
 }
 
+static void delete_client(client_t *cli) {
+    dlist_node *node;
+    event_regis(&fnsproxy_srv.evt, &cli->sock, EVENT_DEL);
+    node = dlist_search_key(&fnsproxy_srv.clis, &cli->sock);
+    if (!node) {
+        return;
+    }
+
+    dlist_delete_node(&fnsproxy_srv.clis, node);
+    close(cli->sock.fd);
+    free(cli);
+}
+
 static void handle_dns_response(void *arg, int ev) {
     int nrecv, nsent;
     char buf[MAX_BUFFER_SIZE];
@@ -67,6 +84,8 @@ static void handle_dns_response(void *arg, int ev) {
     if (nsent < 0 || nsent != nrecv) {
         return;
     }
+
+    delete_client((client_t *)sock->x);
 }
 
 void read_from_client(void *arg, int ev) {
@@ -108,10 +127,30 @@ void read_from_client(void *arg, int ev) {
     cli->sock.f = (handle_fn)handle_dns_response;
     cli->sock.fd = dns_fd;
     cli->sock.added = 0;
+    cli->expire_at = fnsproxy_srv.clock + READ_TIMEOUT;
 
     ret = event_regis(&fnsproxy_srv.evt, &cli->sock, EVENT_RD);
     if (ret < 0) {
         free(cli);
         return;
+    }
+
+    if (!dlist_add_node_tail(&fnsproxy_srv.clis, cli)) {
+        free(cli);
+        return;
+    }
+}
+
+void check_timeout() {
+    dlist_iter iter;
+    dlist_node *node;
+    client_t *cli;
+    dlist_rewind(&fnsproxy_srv.clis, &iter);
+
+    while ((node = dlist_next(&iter))) {
+        cli = (client_t *)node->value;
+        if (cli->expire_at > fnsproxy_srv.clock) {
+            delete_client(cli);
+        }
     }
 }

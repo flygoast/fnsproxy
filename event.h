@@ -7,7 +7,7 @@
 #define EVENT_TICK      3
 #define EVENT_HUP       4
 
-#define DEFAULT_EVENT_INTERVAL      10  /* ms */
+#define DEFAULT_EVENT_INTERVAL      100     /* ms */
 
 typedef void (*handle_fn)(void *arg, int event);
 

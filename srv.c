@@ -12,7 +12,7 @@
 #define DEFAULT_LISTEN_PORT     53
 #define DEFAULT_DNS_PORT        53
 #define DEFAULT_GEO_FILE        "fnsproxy.geo"
-#define DEFAULT_DNS_ADDR        "114.114.114.114"
+#define DEFAULT_DNS_ADDR        "8.8.8.8"
 
 /* global server configure */
 server_t fnsproxy_srv;
@@ -57,7 +57,7 @@ void srv_init() {
     fnsproxy_srv.daemon = 0;
     fnsproxy_srv.dns_addr = NULL;
     fnsproxy_srv.dns_port = DEFAULT_DNS_PORT;
-
+    fnsproxy_srv.clock = mstime();
     dlist_init(&fnsproxy_srv.clis);
 }
 
@@ -69,7 +69,8 @@ void srv_serve() {
         srv_su(fnsproxy_srv.user);
     }
 
-    if (event_init(&fnsproxy_srv.evt, srv_cron, &fnsproxy_srv, DEFAULT_EVENT_INTERVAL) != 0) {
+    if (event_init(&fnsproxy_srv.evt, srv_cron, &fnsproxy_srv, 
+            DEFAULT_EVENT_INTERVAL) != 0) {
         fprintf(stderr, "event_init failed\n");
         exit(1);
     }
@@ -95,7 +96,7 @@ void srv_serve() {
     fnsproxy_srv.server_addr.sin_family = AF_INET;
     fnsproxy_srv.server_addr.sin_port = htons(fnsproxy_srv.dns_port);
     fnsproxy_srv.server_addr.sin_addr.s_addr = inet_addr(fnsproxy_srv.dns_addr ?
-            fnsproxy_srv.dns_addr : DEFAULT_DNS_ADDR);
+        fnsproxy_srv.dns_addr : DEFAULT_DNS_ADDR);
 
     if (fnsproxy_srv.daemon) {
         daemon(1, 1);
@@ -114,6 +115,6 @@ void srv_destroy() {
 }
 
 void srv_cron(void *arg, int event) {
-    static int i = 0;
-    printf("%d\n", ++i);
+    fnsproxy_srv.clock = mstime();
+    //check_timeout();
 }
