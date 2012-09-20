@@ -1,5 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -9,10 +11,10 @@
 
 #define MAX_BUFFER_SIZE     2048
 
-typedef struct client {
+typedef struct client_st {
     evtent_t            sock;
-    struct sockaddr_in  caddr;
-} client;
+    struct sockaddr_in  cli_addr;
+} client_t;
 
 int create_udp_socket(char *addr, int port) {
     struct sockaddr_in srv;
@@ -43,67 +45,69 @@ int set_non_block(int fd) {
 }
 
 static void handle_dns_response(void *arg, int ev) {
-    int ret, ret1;
+    int nrecv, nsent;
     char buf[MAX_BUFFER_SIZE];
-    struct sockaddr_in  caddr;
     struct sockaddr_in  saddr;
-    socklen_t           caddr_len;
-    socklen_t           saddr_len;
+    socklen_t addr_len = sizeof(struct sockaddr_in);
 
     evtent_t *sock = (evtent_t *)arg;
     if (ev != EVENT_RD) {
         return;
     }
 
-    ret = recvfrom(sock->fd, buf, MAX_BUFFER_SIZE, 0,
-            (struct sockaddr *)&saddr, &saddr_len);
-    if (ret > 0) {
-        ret1 = sendto(fnsproxy_srv.sock.fd, buf, ret1, 0,
-            (struct sockaddr *)&caddr, sizeof(caddr_len));
-        if (ret1 < 0 || ret1 != ret) {
-            return;
-        }
+    nrecv = recvfrom(sock->fd, buf, MAX_BUFFER_SIZE, 0,
+            (struct sockaddr *)&saddr, &addr_len);
+    /* TODO: CHECK PACKET SOURCE */
+    if (nrecv < 0) {
+        return;
+    }
+
+    nsent = sendto(fnsproxy_srv.sock.fd, buf, nrecv, 0,
+            (struct sockaddr *)&(((client_t *)(sock->x))->cli_addr), addr_len);
+    if (nsent < 0 || nsent != nrecv) {
+        return;
     }
 }
 
 void read_from_client(void *arg, int ev) {
     char buf[MAX_BUFFER_SIZE];
-    struct sockaddr_in caddr;
-    struct sockaddr_in saddr;
-    socklen_t caddr_len = sizeof(caddr);
-    evtent_t *sock = (evtent_t *)arg;
+    socklen_t addr_len = sizeof(struct sockaddr_in);
     int ret;
     int dns_fd;
-    client *cli;
-    
+    client_t *cli;
+    evtent_t *sock = (evtent_t *)arg;
+
+    cli = (client_t *)malloc(sizeof(*cli));
+    if (!cli) {
+        fprintf(stderr, "OOM");
+        return;
+    }
+
     ret = recvfrom(sock->fd, buf, sizeof(buf), 0,
-            (struct sockaddr *)&caddr, &caddr_len);
+            (struct sockaddr *)&cli->cli_addr, &addr_len);
     if (ret < 0) {
+        free(cli);
         return;
     }
 
     dns_fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (dns_fd < 0) {
+        free(cli);
         return;
     }
     set_non_block(dns_fd);
 
-    if (sendto(dns_fd, buf, ret, 0,
-            (struct sockaddr *)&saddr, saddr_len) < 0) {
+    if (sendto(dns_fd, buf, ret, 0, 
+            (struct sockaddr *)&fnsproxy_srv.server_addr, addr_len) < 0) {
+        free(cli);
         close(dns_fd);
         return;
     }
 
-    cli = (client *)malloc(sizeof(*cli));
-    if (!cli) {
-        return;
-    }
-
-    cli->sock.x = cli;
+    cli->sock.x = (void *)cli;
     cli->sock.f = (handle_fn)handle_dns_response;
     cli->sock.fd = dns_fd;
     cli->sock.added = 0;
-    cli->caddr = caddr;
 
     ret = event_regis(&fnsproxy_srv.evt, &cli->sock, EVENT_RD);
     if (ret < 0) {

@@ -1,6 +1,7 @@
 #ifndef __SRV_H_INCLUDED__
 #define __SRV_H_INCLUDED__
 
+#include <arpa/inet.h>
 #include "net.h"
 #include "event.h"
 #include "dlist.h"
@@ -9,7 +10,7 @@ typedef struct server_st {
     int                 port;
     char                *addr;
     char                *user;
-    char                *conf;
+    char                *geo_file;
     int                 range;
     int                 daemon;
     char                *dns_addr;
@@ -17,7 +18,7 @@ typedef struct server_st {
     evtent_t            sock;
     event_t             evt;
     dlist               clis;
-    struct sockaddr_in  saddr;
+    struct sockaddr_in  server_addr;
 } server_t;
 
 extern server_t fnsproxy_srv;

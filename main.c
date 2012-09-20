@@ -38,7 +38,7 @@ static void option_parse(int argc, char **argv) {
     char *end;
     int c;
 
-    while ((c = getopt(argc, argv, "drp:l:n:a:u:c:hv")) != -1) {
+    while ((c = getopt(argc, argv, "drp:l:n:a:u:g:hv")) != -1) {
         switch (c) {
         case 'd':
             fnsproxy_srv.daemon = 1;
@@ -81,9 +81,9 @@ static void option_parse(int argc, char **argv) {
                 exit(1);
             }
             break;
-        case 'c':
-            fnsproxy_srv.conf = strdup(optarg);
-            if (!fnsproxy_srv.conf) {
+        case 'g':
+            fnsproxy_srv.geo_file = strdup(optarg);
+            if (!fnsproxy_srv.geo_file) {
                 fprintf(stderr, "OOM!......");
                 exit(1);
             }

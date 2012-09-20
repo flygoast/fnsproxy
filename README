@@ -1,4 +1,5 @@
 fnsproxy
 
-=====================================
-fnsproxy is DNS name server proxy. 
+==================================================================
+fnsproxy is DNS name server proxy. It can replace the IP addresss 
+according your geo settings.

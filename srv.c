@@ -11,8 +11,8 @@
 
 #define DEFAULT_LISTEN_PORT     53
 #define DEFAULT_DNS_PORT        53
-#define DEFAULT_CONF            "fnsproxy.conf"
-#define DEFAULT_DNS_ADDR        "8.8.8.8"
+#define DEFAULT_GEO_FILE        "fnsproxy.geo"
+#define DEFAULT_DNS_ADDR        "114.114.114.114"
 
 /* global server configure */
 server_t fnsproxy_srv;
@@ -52,14 +52,13 @@ void srv_init() {
     fnsproxy_srv.port = DEFAULT_LISTEN_PORT;
     fnsproxy_srv.addr = NULL;
     fnsproxy_srv.user = NULL;
-    fnsproxy_srv.conf = NULL;
+    fnsproxy_srv.geo_file = NULL;
     fnsproxy_srv.range = 0;
     fnsproxy_srv.daemon = 0;
     fnsproxy_srv.dns_addr = NULL;
     fnsproxy_srv.dns_port = DEFAULT_DNS_PORT;
 
-    dlist_init(&fnsproxy_srv.fds);
-
+    dlist_init(&fnsproxy_srv.clis);
 }
 
 void srv_serve() {
@@ -70,8 +69,7 @@ void srv_serve() {
         srv_su(fnsproxy_srv.user);
     }
 
-    /* 10 ms */
-    if (event_init(&fnsproxy_srv.evt, srv_cron, &fnsproxy_srv, 1000) != 0) {
+    if (event_init(&fnsproxy_srv.evt, srv_cron, &fnsproxy_srv, DEFAULT_EVENT_INTERVAL) != 0) {
         fprintf(stderr, "event_init failed\n");
         exit(1);
     }
@@ -93,10 +91,10 @@ void srv_serve() {
         exit(1);
     }
 
-    bzero(&fnsproxy_srv.saddr, sizeof(struct sockaddr_in));
-    fnsproxy_srv.saddr.sin_family = AF_INET;
-    fnsproxy_srv.saddr.sin_port = htons(fnsproxy_srv.dns_port);
-    fnsproxy_srv.saddr.sin_addr.s_addr = inet_addr(fnsproxy_srv.dns_addr ?
+    bzero(&fnsproxy_srv.server_addr, sizeof(struct sockaddr_in));
+    fnsproxy_srv.server_addr.sin_family = AF_INET;
+    fnsproxy_srv.server_addr.sin_port = htons(fnsproxy_srv.dns_port);
+    fnsproxy_srv.server_addr.sin_addr.s_addr = inet_addr(fnsproxy_srv.dns_addr ?
             fnsproxy_srv.dns_addr : DEFAULT_DNS_ADDR);
 
     if (fnsproxy_srv.daemon) {
@@ -108,11 +106,11 @@ void srv_serve() {
 void srv_destroy() {
     if (fnsproxy_srv.addr) free(fnsproxy_srv.addr);
     if (fnsproxy_srv.user) free(fnsproxy_srv.user);
-    if (fnsproxy_srv.conf) free(fnsproxy_srv.conf);
+    if (fnsproxy_srv.geo_file) free(fnsproxy_srv.geo_file);
     if (fnsproxy_srv.dns_addr) free(fnsproxy_srv.dns_addr);
 
     event_destroy(&fnsproxy_srv.evt);
-    dlist_destroy(&fnsproxy_srv.fds);
+    dlist_destroy(&fnsproxy_srv.clis);
 }
 
 void srv_cron(void *arg, int event) {
