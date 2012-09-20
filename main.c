@@ -31,14 +31,18 @@ static void version() {
 
 static void usage() {
     fprintf(stderr, "Usage: %s [OPTIONS]\n", "fnsproxy");
+    /* TODO */
 }
 
 static void option_parse(int argc, char **argv) {
     char *end;
     int c;
 
-    while ((c = getopt(argc, argv, "rp:l:u:c:hv")) != -1) {
+    while ((c = getopt(argc, argv, "drp:l:n:a:u:c:hv")) != -1) {
         switch (c) {
+        case 'd':
+            fnsproxy_srv.daemon = 1;
+            break;
         case 'r':
             fnsproxy_srv.range = 1;
             break;
@@ -52,6 +56,20 @@ static void option_parse(int argc, char **argv) {
         case 'l':
             fnsproxy_srv.addr = strdup(optarg);
             if (!fnsproxy_srv.addr) {
+                fprintf(stderr, "OOM!......");
+                exit(1);
+            }
+            break;
+        case 'n':
+            fnsproxy_srv.dns_port = strtol(optarg, &end, 10);
+            if (end == optarg || (*end != ' ' && *end != '\0')) {
+                usage();
+                exit(1);
+            }
+            break;
+        case 'a':
+            fnsproxy_srv.dns_addr = strdup(optarg);
+            if (!fnsproxy_srv.dns_addr) {
                 fprintf(stderr, "OOM!......");
                 exit(1);
             }

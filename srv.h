@@ -1,18 +1,23 @@
 #ifndef __SRV_H_INCLUDED__
 #define __SRV_H_INCLUDED__
 
+#include "net.h"
 #include "event.h"
 #include "dlist.h"
 
 typedef struct server_st {
-    int         port;
-    char        *addr;
-    char        *user;
-    char        *conf;
-    int         range;
-    evtent_t    sock;
-    event_t     evt;
-    dlist       fds;
+    int                 port;
+    char                *addr;
+    char                *user;
+    char                *conf;
+    int                 range;
+    int                 daemon;
+    char                *dns_addr;
+    int                 dns_port;
+    evtent_t            sock;
+    event_t             evt;
+    dlist               clis;
+    struct sockaddr_in  saddr;
 } server_t;
 
 extern server_t fnsproxy_srv;
