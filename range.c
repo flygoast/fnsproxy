@@ -41,8 +41,25 @@ range_t *range_load(char *filename) {
 void range_free(range_t *r);
 void *range_find(range_t *r, uint32_t key);
 
-void range_insert(range_t *r, uint32_t start, uint32_t end) {
-    
+void range_insert(range_t *r, uint32_t start, uint32_t end, void *value) {
+    uint32_t    n;
+    uint32_t    h, i, s, e;
+    range_low_t *low;
+
+    for (n = start; n <= end; n = (n + 0x10000) & 0xffff0000) {
+        h = n >> 16;
+        if (n == start) {
+            s = n & 0xffff;
+        } else {
+            s = 0;
+        }
+
+        if ((n | 0xffff) > end) {
+            e = end & 0xffff;
+        } else {
+            e = 0xffff;
+        }
+    }
 }
 
 
