@@ -26,6 +26,7 @@ int range_insert_str(range_t *r, char *start, char *end, char *ip_addr);
 void range_delete(range_t *r, uint32_t start, uint32_t end);
 void range_delete_str(range_t *r, char *start, char *end);
 uint32_t range_get(range_t *r, uint32_t key);
+char *range_get_str(range_t *r, char *key);
 void range_destroy(range_t *r);
 void range_free(range_t *r);
 

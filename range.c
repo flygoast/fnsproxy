@@ -185,12 +185,22 @@ next:
 
 int range_insert_str(range_t *r, char *start, char *end, char *ip) {
     uint32_t s, e, ip_addr;
-    s = inet_addr(start);
-    s = ntohl(s);
-    e = inet_addr(end);
-    e = ntohl(e);
-    ip_addr = inet_addr(ip);
-    ip_addr = ntohl(ip_addr);
+    struct in_addr in;
+
+    if (inet_aton(start, &in) == 0) {
+        return -1;
+    }
+    s = ntohl(in.s_addr);
+
+    if (inet_aton(end, &in) == 0) {
+        return -1;
+    }
+    e = ntohl(in.s_addr);
+
+    if (inet_aton(ip, &in) == 0) {
+        return -1;
+    }
+    ip_addr = ntohl(in.s_addr);
 
     return range_insert(r, s, e, ip_addr);
 }
@@ -233,16 +243,25 @@ void range_delete(range_t *r, uint32_t start, uint32_t end) {
             if (s != low[i].start && e != low[i].end) {
                 continue;
             }
+
+            /* TODO log */
         }
     }
 }
 
 void range_delete_str(range_t *r, char *start, char *end) {
     uint32_t s, e;
-    s = inet_addr(start);
-    s = ntohl(s);
-    e = inet_addr(end);
-    e = ntohl(e);
+    struct in_addr in;
+
+    if (inet_aton(start, &in) == 0) {
+        return;
+    }
+    s = ntohl(in.s_addr);
+
+    if (inet_aton(end, &in) == 0) {
+        return;
+    }
+    e = ntohl(in.s_addr);
 
     range_delete(r, s, e);
 }
@@ -268,6 +287,20 @@ uint32_t range_get(range_t *r, uint32_t key) {
         }
     }
     return ip_addr;
+}
+
+char *range_get_str(range_t *r, char *key) {
+    uint32_t k, v;
+    struct in_addr in;
+
+    if (inet_aton(key, &in) == 0) {
+        return NULL;
+    }
+    k = ntohl(in.s_addr);
+    v = range_get(r, k);
+
+    in.s_addr = htonl(v);
+    return inet_ntoa(in);
 }
 
 void range_destroy(range_t *r) {
@@ -326,7 +359,7 @@ void range_dump(range_t *r) {
 }
 
 int main(int argc, char **argv) {
-    char *start, *end, *ip_addr;
+    char *start, *end, *ip_addr, *ip;
 
     range_t *r = range_create();
     range_set_def(r, 0xffffffff);
@@ -382,7 +415,28 @@ int main(int argc, char **argv) {
     end = "192.168.0.115";
     range_delete_str(r, start, end);
 
+    start = "192.168.0.120";
+    end = "192.168.0.150";
+    range_delete_str(r, start, end);
+
     range_dump(r);
+    printf("**********************************\n");
+    
+    ip = "192.168.0.123";
+    printf("%s => %s\n", ip, range_get_str(r, ip));
+
+    ip = "192.168.0.111";
+    printf("%s => %s\n", ip, range_get_str(r, ip));
+
+    ip = "192.168.0.51";
+    printf("%s => %s\n", ip, range_get_str(r, ip));
+
+    ip = "192.168.0.50";
+    printf("%s => %s\n", ip, range_get_str(r, ip));
+
+    ip = "172.23.111.50";
+    printf("%s => %s\n", ip, range_get_str(r, ip));
+
     range_free(r);
     exit(0);
 }
