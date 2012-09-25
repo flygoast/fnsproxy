@@ -3,8 +3,9 @@
 
 #include <stdint.h>
 
-#define DNS_A_RECORD    0x01
-#define DNS_MX_RECORD   0x0f
+#define DNS_A_RECORD        0x01
+#define DNS_CNAME_RECORD    0x05
+#define DNS_MX_RECORD       0x0f
 
 typedef struct dns_header_st {
     uint16_t        tid;            /* transaction id */
@@ -15,5 +16,7 @@ typedef struct dns_header_st {
     uint16_t        nadditionals;   /* additional RR number */
     unsigned char   data[0];        /* data stub */
 } dns_header_t;
+
+int dns_parse_proxy(unsigned char *pkt, int len);
 
 #endif /* __DNS_H_INCLUDED__ */

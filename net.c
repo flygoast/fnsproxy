@@ -10,6 +10,7 @@
 #include "dlist.h"
 #include "srv.h"
 #include "net.h"
+#include "dns.h"
 
 #define MAX_BUFFER_SIZE     2048
 #define READ_TIMEOUT        3000    /* ms */
@@ -78,6 +79,9 @@ static void handle_dns_response(void *arg, int ev) {
     if (nrecv < 0) {
         return;
     }
+
+    /* TODO */
+    dns_parse_proxy((unsigned char *)buf, nrecv);
 
     nsent = sendto(fnsproxy_srv.sock.fd, buf, nrecv, 0,
             (struct sockaddr *)&(((client_t *)(sock->x))->cli_addr), addr_len);

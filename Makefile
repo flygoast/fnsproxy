@@ -17,7 +17,8 @@ OFILES=\
 	vector.o\
 	range.o\
 	radix.o\
-	geo.o
+	geo.o\
+	dns.o
 
 all: $(VERS) $(TARG)
 .PHONY: all
