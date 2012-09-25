@@ -29,5 +29,6 @@ uint32_t range_get(range_t *r, uint32_t key);
 char *range_get_str(range_t *r, char *key);
 void range_destroy(range_t *r);
 void range_free(range_t *r);
+void range_dump(range_t *r);
 
 #endif /* __RANGE_H_INCLUDED__ */

@@ -319,10 +319,6 @@ void range_free(range_t *r) {
     free(r);
 }
 
-/* gcc vector.c range.c -D RANGE_TEST_MAIN */
-#ifdef RANGE_TEST_MAIN
-#include <assert.h>
-
 void range_dump(range_t *r) {
     int             i, j;
     char            *addr_s;
@@ -357,6 +353,10 @@ void range_dump(range_t *r) {
         }
     }
 }
+
+/* gcc vector.c range.c -D RANGE_TEST_MAIN */
+#ifdef RANGE_TEST_MAIN
+#include <assert.h>
 
 int main(int argc, char **argv) {
     char *start, *end, *ip_addr, *ip;
