@@ -298,6 +298,9 @@ char *range_get_str(range_t *r, char *key) {
     }
     k = ntohl(in.s_addr);
     v = range_get(r, k);
+    if (v == INVALID_IP_ADDR) {
+        return NULL;
+    }
 
     in.s_addr = htonl(v);
     return inet_ntoa(in);

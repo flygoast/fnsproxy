@@ -13,7 +13,11 @@ OFILES=\
 	srv.o\
 	event.o\
 	times.o\
-	dlist.o
+	dlist.o\
+	vector.o\
+	range.o\
+	radix.o\
+	geo.o
 
 all: $(VERS) $(TARG)
 .PHONY: all

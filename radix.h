@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#define RADIX_NO_VALUE      (unsigned char)-1
+#define RADIX_NO_VALUE      (uint32_t)0
 
 typedef struct radix_node_st    radix_node_t;
 
