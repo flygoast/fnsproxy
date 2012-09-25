@@ -2,6 +2,7 @@
 #define __SRV_H_INCLUDED__
 
 #include <arpa/inet.h>
+#include "geo.h"
 #include "net.h"
 #include "event.h"
 #include "dlist.h"
@@ -11,7 +12,7 @@ typedef struct server_st {
     char                *addr;
     char                *user;
     char                *geo_file;
-    int                 range;
+    int                 geo_mode;
     int                 daemon;
     char                *dns_addr;
     int                 dns_port;
@@ -20,6 +21,7 @@ typedef struct server_st {
     evtent_t            sock;
     event_t             evt;
     dlist               clis;
+    geo_t               *geo;
     struct sockaddr_in  server_addr;
 } server_t;
 

@@ -6,6 +6,7 @@
 #include <pwd.h>
 #include <sys/types.h>
 #include "srv.h"
+#include "geo.h"
 #include "net.h"
 #include "times.h"
 
@@ -54,7 +55,7 @@ void srv_init() {
     fnsproxy_srv.addr = NULL;
     fnsproxy_srv.user = NULL;
     fnsproxy_srv.geo_file = NULL;
-    fnsproxy_srv.range = 0;
+    fnsproxy_srv.geo_mode = GEO_RANGE;
     fnsproxy_srv.daemon = 0;
     fnsproxy_srv.dns_addr = NULL;
     fnsproxy_srv.dns_port = DEFAULT_DNS_PORT;
@@ -99,9 +100,18 @@ void srv_serve() {
     fnsproxy_srv.server_addr.sin_addr.s_addr = inet_addr(fnsproxy_srv.dns_addr ?
         fnsproxy_srv.dns_addr : DEFAULT_DNS_ADDR);
 
+    fnsproxy_srv.geo = geo_load(NULL, 
+            fnsproxy_srv.geo_file ? fnsproxy_srv.geo_file : DEFAULT_GEO_FILE,
+            fnsproxy_srv.geo_mode);
+    if (!fnsproxy_srv.geo) {
+        fprintf(stderr, "load geo file failed:%s\n", strerror(errno));
+        exit(1);
+    }
+
     if (fnsproxy_srv.daemon) {
         daemon(1, 1);
     }
+
     event_loop(&fnsproxy_srv.evt);
 }
 
@@ -113,6 +123,9 @@ void srv_destroy() {
 
     event_destroy(&fnsproxy_srv.evt);
     dlist_destroy(&fnsproxy_srv.clis);
+    if (fnsproxy_srv.geo) {
+        geo_unload(fnsproxy_srv.geo);
+    }
 }
 
 void srv_cron(void *arg, int event) {

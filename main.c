@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include "version.h"
+#include "geo.h"
 #include "srv.h"
 
 static void set_sig_handlers() {
@@ -38,13 +39,13 @@ static void option_parse(int argc, char **argv) {
     char *end;
     int c;
 
-    while ((c = getopt(argc, argv, "drp:l:n:a:u:g:hv")) != -1) {
+    while ((c = getopt(argc, argv, "dcp:l:n:a:u:g:hv")) != -1) {
         switch (c) {
         case 'd':
             fnsproxy_srv.daemon = 1;
             break;
-        case 'r':
-            fnsproxy_srv.range = 1;
+        case 'c':
+            fnsproxy_srv.geo_mode = GEO_CIDR;
             break;
         case 'p':
             fnsproxy_srv.port = strtol(optarg, &end, 10);
