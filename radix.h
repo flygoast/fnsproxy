@@ -12,7 +12,7 @@ struct radix_node_st {
     radix_node_t    *right;
     radix_node_t    *left;
     radix_node_t    *parent;
-    unsigned char   value;
+    uint32_t        value;
 };
 
 typedef struct {
@@ -23,12 +23,12 @@ typedef struct {
 radix_tree_t *radix_tree_create();
 
 int radix32tree_insert(radix_tree_t *tree, 
-        uint32_t key, uint32_t mask, unsigned char value);
+        uint32_t key, uint32_t mask, uint32_t value);
 
 int radix32tree_delete(radix_tree_t *tree,
         uint32_t key, uint32_t mask);
 
-unsigned char radix32tree_find(radix_tree_t *tree, uint32_t key);
+uint32_t radix32tree_find(radix_tree_t *tree, uint32_t key);
 void radix_tree_free(radix_tree_t *tree);
 
 #endif /* __RADIX_H_INCLUDED__ */

@@ -26,7 +26,7 @@ radix_tree_t *radix_tree_create() {
 
 /* Need a 'mask' parameter is for storage of CIDR. */
 int radix32tree_insert(radix_tree_t *tree, uint32_t key,
-        uint32_t mask, unsigned char value) {
+        uint32_t mask, uint32_t value) {
     uint32_t        bit;
     radix_node_t    *node, *next;
     bit = 0x80000000;
@@ -138,9 +138,9 @@ int radix32tree_delete(radix_tree_t *tree, uint32_t key, uint32_t mask) {
     return 0;
 }
 
-unsigned char radix32tree_find(radix_tree_t *tree, uint32_t key) {
+uint32_t radix32tree_find(radix_tree_t *tree, uint32_t key) {
     uint32_t        bit;
-    uintptr_t       value;
+    uint32_t        value;
     radix_node_t    *node;
 
     bit = 0x80000000;
@@ -176,7 +176,8 @@ void radix_tree_free(radix_tree_t *tree) {
 
     node = tree->root;
     for ( ; ; ) {
-        /* We are at the trie root and we have no more leaves, end of algorithm */
+        /* We are at the trie root and we have no more leaves, 
+         * end of algorithm */
         if (!node->left && !node->right && !node->parent) {
             free(node);
             break;
@@ -206,7 +207,7 @@ void radix_tree_free(radix_tree_t *tree) {
     }
 }
 
-/* gcc radix.c -DRADIX_TEST_MAIN -I../inc */
+/* gcc radix.c -DRADIX_TEST_MAIN */
 #ifdef RADIX_TEST_MAIN
 #include <stdio.h>
 #include <assert.h>
