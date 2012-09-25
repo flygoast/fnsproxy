@@ -119,32 +119,99 @@ static int geo_parse_range(geo_t *g, unsigned char *range,
 
         return range_insert(g->u.range, start, end, ip_addr);
     }
-
     return 0;
 }
 
-static int geo_parse_cidr(geo_t *g, unsigned char *range, 
+static int parse_cidr(char *cidr, uint32_t *addr, uint32_t *mask) {
+    char *p;
+    uint32_t shift;
+
+    if (strcmp(cidr, "255.255.255.255") == 0) {
+        *addr = 0xffffffff;
+        *mask = 0xffffffff;
+        return 0;
+    }
+
+    p = strchr(cidr, '/');
+    if (!p) {
+        if (inet_aton(cidr, &in) == 0) {
+            return -1;
+        }
+        *addr = ntohl(in.s_addr);
+        *mask = 0;
+        return 0;
+    } else {
+        *p++ = '\0';
+        if (inet_aton(cidr, &in) == 0) {
+            return -1;
+        }
+        *addr =  = ntohl(in.s_addr);
+        shift = atoi(p);
+        if (shift > 32) {
+            return -1;
+        }
+
+        if (shift) {
+            *mask = (uint32_t)(0xffffffffu << (32 - shift));
+        } else {
+            *mask = 0;
+        }
+
+        return 0;
+    }
+    return -1;
+}
+
+static int geo_parse_cidr(geo_t *g, unsigned char *cidr, 
         unsigned char *value) {
-    uint32_t    
-    if (strcmp(range, "default") == 0) {
+    struct in_addr  in;
+    uint32_t        addr;
+    uint32_t        mask;
+    uint32_t        ip_addr;
+    uint32_t        old;
+
+    if (strcmp(cidr, "default") == 0) {
         if (inet_aton(value, &in) == 0) {
             return -1;
         }
         ip_addr = ntohl(in.s_addr);
-    } else if (strcmp(range, "delete") == 0) {
-        if (parse_range(value, &start, &end) != 0) {
+        addr = 0;
+        mask = 0;
+    } else if (strcmp(cidr, "delete") == 0) {
+        if (parse_cidr(valude, &addr, &mask) != 0) {
             return -1;
         }
-        range_delete(g->u.range, start, end);
+        if (radix32tree_delete(g->u.tree, addr, mask) != 0) {
+            return -1;
+        }
         return 0;
-    } else {
+    } 
  
-    }
-
-    if (radix32tree_insert(0, 0, ip_addr) != 0) {
+    if (parse_cidr(cidr, &addr, &mask) != 0) {
         return -1;
     }
 
+    if (inet_aton(value, &in) == 0) {
+        return -1;
+    }
+    ip_addr = ntohl(in.s_addr);
+
+    /* Retry 3 times */
+    for (i = 3; i; --i) {
+        ret = radix32tree_insert(g->u.tree, addr, mask, ip_addr);
+        if (ret == 0) {
+            return 0;
+        }
+
+        old = radix32tree_find(g->u.tree, addr & mask);
+        /* TODO log */
+        ret = radix32tree_delete(g->u.tree, addr, mask);
+        if (ret != 0) {
+            return -1;
+        }
+    }
+
+    return -1;
 }
 
 geo_t *geo_load(geo_t *g, char *filename, int geo_mode) {
@@ -286,7 +353,7 @@ void geo_dump(geo_t *g, int geo_mode) {
 #ifdef GEO_TEST_MAIN
 int main(int argc, char **argv) {
     char *ip_str;
-    geo_t *g = geo_load(NULL, "fnsproxy.geo", GEO_RANGE);
+    geo_t *g = geo_load(NULL, "range.geo", GEO_RANGE);
     assert(g);
     geo_dump(g, GEO_RANGE);
 
