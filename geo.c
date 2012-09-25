@@ -123,6 +123,30 @@ static int geo_parse_range(geo_t *g, unsigned char *range,
     return 0;
 }
 
+static int geo_parse_cidr(geo_t *g, unsigned char *range, 
+        unsigned char *value) {
+    uint32_t    
+    if (strcmp(range, "default") == 0) {
+        if (inet_aton(value, &in) == 0) {
+            return -1;
+        }
+        ip_addr = ntohl(in.s_addr);
+    } else if (strcmp(range, "delete") == 0) {
+        if (parse_range(value, &start, &end) != 0) {
+            return -1;
+        }
+        range_delete(g->u.range, start, end);
+        return 0;
+    } else {
+ 
+    }
+
+    if (radix32tree_insert(0, 0, ip_addr) != 0) {
+        return -1;
+    }
+
+}
+
 geo_t *geo_load(geo_t *g, char *filename, int geo_mode) {
     int             n;
     FILE            *fp;
@@ -143,11 +167,20 @@ geo_t *geo_load(geo_t *g, char *filename, int geo_mode) {
         if (!g) {
             return NULL;
         }
+
+        g->geo_mode = geo_mode;
         if (geo_mode == GEO_RANGE) {
-            g->geo_mode = geo_mode;
             g->u.range = range_create();
+            if (!g->u.range) {
+                free(g);
+                return NULL;
+            }
         } else if (geo_mode == GEO_CIDR) {
-            /* TODO */
+            g->u.tree = radix_tree_create();
+            if (!g->u.tree) {
+                free(g);
+                return NULL;
+            }
         } else {
             return NULL;
         }
@@ -189,7 +222,9 @@ geo_t *geo_load(geo_t *g, char *filename, int geo_mode) {
                 goto error;
             }
         } else if (geo_mode == GEO_CIDR) {
-            /* TODO */
+            if (geo_parse_cidr(g, field[0], field[1]) != 0) {
+                goto error;
+            }
         } else {
             /* never get here */
         }
