@@ -1,19 +1,31 @@
+#include <stdio.h>
 #include "srv.h"
 #include "dns.h"
+#include "log.h"
 
 static int process_ip(unsigned char *p, int len) {
     uint32_t ip;
     uint32_t proxy;
+    struct in_addr in;
+    char    buf_in[INET_ADDRSTRLEN + 1];
+    char    buf_proxy[INET_ADDRSTRLEN + 1];
+
     if (len != 4) {
         return -1;
     }
 
     ip = ntohl(*(uint32_t *)p);
     if ((proxy = geo_get(fnsproxy_srv.geo, ip)) != INVALID_IP_ADDR) {
+        in.s_addr = *(uint32_t *)p;
+        snprintf(buf_in, sizeof(buf_in), inet_ntoa(in));
         proxy = htonl(proxy);
         *(uint32_t *)p = proxy;
+        in.s_addr = proxy;
+        snprintf(buf_proxy, sizeof(buf_proxy), inet_ntoa(in));
+        DEBUG_LOG("Replace IP %s with %s", buf_in, buf_proxy);
+        return 0;
     }
-    return 0;
+    return -1;
 }
 
 int dns_parse_proxy(unsigned char *pkt, int len) {

@@ -10,12 +10,7 @@
 #include "net.h"
 #include "errdsp.h"
 #include "times.h"
-
-#define DEFAULT_LISTEN_PORT     53
-#define DEFAULT_DNS_PORT        53
-#define DEFAULT_GEO_FILE        "fnsproxy.geo"
-#define DEFAULT_DNS_ADDR        "8.8.8.8"
-#define CRON_INTERVAL           1000    /* ms */
+#include "log.h"
 
 /* global server configure */
 server_t fnsproxy_srv;
@@ -59,6 +54,7 @@ void srv_init() {
     fnsproxy_srv.user = NULL;
     fnsproxy_srv.geo_file = NULL;
     fnsproxy_srv.geo_mode = GEO_CIDR;
+    fnsproxy_srv.log_file = NULL;
     fnsproxy_srv.daemon = 0;
     fnsproxy_srv.dns_addr = NULL;
     fnsproxy_srv.dns_port = DEFAULT_DNS_PORT;
@@ -115,6 +111,16 @@ void srv_serve() {
         exit(1);
     }
 
+    if (log_init(".", fnsproxy_srv.log_file ? 
+                fnsproxy_srv.log_file : DEFAULT_LOG_FILE,
+                LOG_LEVEL_ALL,
+                LOG_FILE_SIZE,
+                LOG_FILE_NUM,
+                LOG_MULTI_NO) < 0) {
+        err_notify(ED_ERROR, "%s:%d log_init failed", __FILE__, __LINE__);
+        exit(1);
+    }
+
     if (fnsproxy_srv.daemon) {
         daemon(1, 1);
     }
@@ -127,12 +133,14 @@ void srv_destroy() {
     if (fnsproxy_srv.user) free(fnsproxy_srv.user);
     if (fnsproxy_srv.geo_file) free(fnsproxy_srv.geo_file);
     if (fnsproxy_srv.dns_addr) free(fnsproxy_srv.dns_addr);
+    if (fnsproxy_srv.log_file) free(fnsproxy_srv.log_file);
 
     event_destroy(&fnsproxy_srv.evt);
     dlist_destroy(&fnsproxy_srv.clis);
     if (fnsproxy_srv.geo) {
         geo_unload(fnsproxy_srv.geo);
     }
+    log_close();
 }
 
 void srv_cron(void *arg, int event) {

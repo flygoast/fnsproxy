@@ -138,7 +138,7 @@ static int parse_cidr(char *cidr, uint32_t *addr, uint32_t *mask) {
             return -1;
         }
         *addr = ntohl(in.s_addr);
-        *mask = 0;
+        *mask = 0xffffffff;
         return 0;
     } else {
         *p++ = '\0';

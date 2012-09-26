@@ -1,5 +1,6 @@
 *.o
 *.lo
+*.log
 a.out
 tags
 fnsproxy

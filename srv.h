@@ -7,12 +7,20 @@
 #include "event.h"
 #include "dlist.h"
 
+#define DEFAULT_LISTEN_PORT     53
+#define DEFAULT_DNS_PORT        53
+#define DEFAULT_GEO_FILE        "fnsproxy.geo"
+#define DEFAULT_DNS_ADDR        "114.114.114.114"
+#define DEFAULT_LOG_FILE        "fnsproxy.log"
+#define CRON_INTERVAL           1000    /* ms */
+
 typedef struct server_st {
     int                 port;
     char                *addr;
     char                *user;
     char                *geo_file;
     int                 geo_mode;
+    char                *log_file;
     int                 daemon;
     char                *dns_addr;
     int                 dns_port;

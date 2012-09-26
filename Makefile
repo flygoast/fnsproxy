@@ -1,6 +1,6 @@
 PREFIX=/usr/local/
 BINDIR=$(PREFIX)/bin
-CFLAGS=-Wall -Werror -g
+CFLAGS=-Wall -Werror -g -DDEBUG
 LDFLAGS=
 OS=$(shell uname -s | tr A-Z a-z)
 INSTALL=install
@@ -19,7 +19,8 @@ OFILES=\
 	radix.o\
 	geo.o\
 	dns.o\
-	errdsp.o
+	errdsp.o\
+    log.o
 
 all: $(VERS) $(TARG)
 .PHONY: all

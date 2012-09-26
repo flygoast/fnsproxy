@@ -33,15 +33,38 @@ static void version() {
 
 static void usage() {
     fprintf(stderr, "Usage: %s [OPTIONS]\n", "fnsproxy");
-    /* TODO */
+    fprintf(stderr, "  -d       daemonize\n");
+    fprintf(stderr, "  -r       change geo mode to range, default is CIDR\n");
+    fprintf(stderr, "  -p NUM   listen port, default is %d\n", 
+            DEFAULT_LISTEN_PORT);
+    fprintf(stderr, "  -l ADDR  listen address, default is INADDR_ANY\n");
+    fprintf(stderr, "  -n NUM   DNS server port, default is %d\n",
+            DEFAULT_DNS_PORT);
+    fprintf(stderr, "  -a ADDR  DNS server address, default is %s\n", 
+            DEFAULT_DNS_ADDR);
+    fprintf(stderr, "  -u STR   run as the user\n");
+    fprintf(stderr, "  -g STR   geo file, default is %s\n",
+            DEFAULT_GEO_FILE);
+    fprintf(stderr, "  -o STR   log file, deefault is %s\n",
+            DEFAULT_LOG_FILE);
+    fprintf(stderr, "  -h       show help information\n");
+    fprintf(stderr, "  -v       show version information\n");
 }
 
 static void option_parse(int argc, char **argv) {
     char *end;
     int c;
 
-    while ((c = getopt(argc, argv, "drp:l:n:a:u:g:hv")) != -1) {
+    while ((c = getopt(argc, argv, "drp:l:n:a:u:g:o:hv")) != -1) {
         switch (c) {
+        case 'o':
+            fnsproxy_srv.log_file = strdup(optarg);
+            if (!fnsproxy_srv.log_file) {
+                err_notify(ED_FATAL, "%s:%d Out of memory when strdup(\"%s\")", 
+                        __FILE__, __LINE__, optarg);
+                exit(1);
+            }
+            break;
         case 'd':
             fnsproxy_srv.daemon = 1;
             break;

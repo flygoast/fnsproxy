@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/socket.h>
@@ -11,6 +12,7 @@
 #include "srv.h"
 #include "net.h"
 #include "dns.h"
+#include "log.h"
 
 #define MAX_BUFFER_SIZE     2048
 #define READ_TIMEOUT        3000    /* ms */
@@ -75,12 +77,17 @@ static void handle_dns_response(void *arg, int ev) {
 
     nrecv = recvfrom(sock->fd, buf, MAX_BUFFER_SIZE, 0,
             (struct sockaddr *)&saddr, &addr_len);
-    /* TODO: CHECK PACKET SOURCE */
+
+    if (memcmp(&saddr, &fnsproxy_srv.server_addr, addr_len)) {
+        WARNING_LOG("Receive invalid packet from %s:%d", 
+            inet_ntoa(saddr.sin_addr), ntohs(saddr.sin_port));
+        return;
+    }
+
     if (nrecv < 0) {
         return;
     }
 
-    /* TODO */
     dns_parse_proxy((unsigned char *)buf, nrecv);
 
     nsent = sendto(fnsproxy_srv.sock.fd, buf, nrecv, 0,
