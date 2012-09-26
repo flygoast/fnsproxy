@@ -1,4 +1,6 @@
 *.o
 *.lo
+a.out
+tags
 fnsproxy
 version.h

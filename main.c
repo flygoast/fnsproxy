@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include "version.h"
+#include "errdsp.h"
 #include "geo.h"
 #include "srv.h"
 
@@ -15,12 +16,12 @@ static void set_sig_handlers() {
     sa.sa_flags = 0;
     ret = sigemptyset(&sa.sa_mask);
     if (ret < 0) {
-        fprintf(stderr, "sigemtpyset failed:%s\n", strerror(errno));
+        err_notify(ED_FATAL, "%s:%d sigemptyset failed", __FILE__, __LINE__);
         exit(1);
     }
     ret = sigaction(SIGPIPE, &sa, NULL);
     if (ret < 0) {
-        fprintf(stderr, "sigaction(SIGPIPE) failed:%s\n", strerror(errno));
+        err_notify(ED_FATAL, "sigaction(SIGPIPE) failed");
         exit(1);
     }
 }
@@ -57,7 +58,8 @@ static void option_parse(int argc, char **argv) {
         case 'l':
             fnsproxy_srv.addr = strdup(optarg);
             if (!fnsproxy_srv.addr) {
-                fprintf(stderr, "OOM!......");
+                err_notify(ED_FATAL, "%s:%d Out of memory when strdup(\"%s\")", 
+                        __FILE__, __LINE__, optarg);
                 exit(1);
             }
             break;
@@ -71,21 +73,24 @@ static void option_parse(int argc, char **argv) {
         case 'a':
             fnsproxy_srv.dns_addr = strdup(optarg);
             if (!fnsproxy_srv.dns_addr) {
-                fprintf(stderr, "OOM!......");
+                err_notify(ED_FATAL, "%s:%d Out of memory when strdup(\"%s\")", 
+                        __FILE__, __LINE__, optarg);
                 exit(1);
             }
             break;
         case 'u':
             fnsproxy_srv.user = strdup(optarg);
             if (!fnsproxy_srv.user) {
-                fprintf(stderr, "OOM!......");
+                err_notify(ED_FATAL, "%s:%d Out of memory when strdup(\"%s\")", 
+                        __FILE__, __LINE__, optarg);
                 exit(1);
             }
             break;
         case 'g':
             fnsproxy_srv.geo_file = strdup(optarg);
             if (!fnsproxy_srv.geo_file) {
-                fprintf(stderr, "OOM!......");
+                err_notify(ED_FATAL, "%s:%d Out of memory when strdup(\"%s\")", 
+                        __FILE__, __LINE__, optarg);
                 exit(1);
             }
             break;

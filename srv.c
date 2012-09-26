@@ -8,6 +8,7 @@
 #include "srv.h"
 #include "geo.h"
 #include "net.h"
+#include "errdsp.h"
 #include "times.h"
 
 #define DEFAULT_LISTEN_PORT     53
@@ -26,26 +27,28 @@ static void srv_su(const char *user) {
     errno = 0;
     pwent = getpwnam(user);
     if (errno) {
-        fprintf(stderr, "getpwname %s failed:%s\n", user, strerror(errno));
+        err_notify(ED_ERROR, "%s:%d getpwname(\"%s\") failed", 
+                __FILE__, __LINE__, user);
         return;
     }
 
     if (!pwent) {
-        fprintf(stderr, "getpwname %s: no such user\n", user);
+        err_notify(ED_ERROR, "%s:%d getpwname(\"%s\") failed", 
+                __FILE__, __LINE__, user);
         return;
     }
 
     ret = setgid(pwent->pw_gid);
     if (ret == -1) {
-        fprintf(stderr, "setgid %d for %s failed:%s\n", pwent->pw_gid,
-                user, strerror(errno));
+        err_notify(ED_ERROR, "%s:%d setgid %d for \"%s\" failed", 
+                __FILE__, __LINE__, pwent->pw_gid, user);
         return;
     }
 
     ret = setuid(pwent->pw_uid);
     if (ret == -1) {
-        fprintf(stderr, "setuid %d for %s failed:%s\n", pwent->pw_uid,
-                user, strerror(errno));
+        err_notify(ED_ERROR, "%s:%d setuid %d for \"%s\" failed", 
+                __FILE__, __LINE__, pwent->pw_uid, user);
         return;
     }
 }
@@ -73,13 +76,14 @@ void srv_serve() {
 
     if (event_init(&fnsproxy_srv.evt, srv_cron, &fnsproxy_srv, 
             DEFAULT_EVENT_INTERVAL) != 0) {
-        fprintf(stderr, "event_init failed\n");
+        err_notify(ED_ERROR, "%s:%d event_init failed", __FILE__, __LINE__);
         exit(1);
     }
 
     if ((listen_fd = create_udp_socket(fnsproxy_srv.addr, 
             fnsproxy_srv.port)) < 0) {
-        fprintf(stderr, "create_socket failed\n");
+        err_notify(ED_ERROR, "%s:%d create_udp_socket failed", 
+                __FILE__, __LINE__);
         exit(1);
     }
 
@@ -90,7 +94,8 @@ void srv_serve() {
 
     ret = event_regis(&fnsproxy_srv.evt, &fnsproxy_srv.sock, EVENT_RD);
     if (ret < 0) {
-        fprintf(stderr, "event_regis failed:%s\n", strerror(errno));
+        err_notify(ED_ERROR, "%s:%d event_regis failed", 
+                __FILE__, __LINE__);
         exit(1);
     }
 
@@ -104,7 +109,9 @@ void srv_serve() {
             fnsproxy_srv.geo_file ? fnsproxy_srv.geo_file : DEFAULT_GEO_FILE,
             fnsproxy_srv.geo_mode);
     if (!fnsproxy_srv.geo) {
-        fprintf(stderr, "load geo file failed:%s\n", strerror(errno));
+        err_notify(ED_ERROR, "%s:%d load geo file \"%s\" failed", 
+            __FILE__, __LINE__, 
+            fnsproxy_srv.geo_file ? fnsproxy_srv.geo_file : DEFAULT_GEO_FILE);
         exit(1);
     }
 
