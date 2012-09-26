@@ -58,7 +58,7 @@ void srv_init() {
     fnsproxy_srv.addr = NULL;
     fnsproxy_srv.user = NULL;
     fnsproxy_srv.geo_file = NULL;
-    fnsproxy_srv.geo_mode = GEO_RANGE;
+    fnsproxy_srv.geo_mode = GEO_CIDR;
     fnsproxy_srv.daemon = 0;
     fnsproxy_srv.dns_addr = NULL;
     fnsproxy_srv.dns_port = DEFAULT_DNS_PORT;

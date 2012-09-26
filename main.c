@@ -40,13 +40,13 @@ static void option_parse(int argc, char **argv) {
     char *end;
     int c;
 
-    while ((c = getopt(argc, argv, "dcp:l:n:a:u:g:hv")) != -1) {
+    while ((c = getopt(argc, argv, "drp:l:n:a:u:g:hv")) != -1) {
         switch (c) {
         case 'd':
             fnsproxy_srv.daemon = 1;
             break;
-        case 'c':
-            fnsproxy_srv.geo_mode = GEO_CIDR;
+        case 'r':
+            fnsproxy_srv.geo_mode = GEO_RANGE;
             break;
         case 'p':
             fnsproxy_srv.port = strtol(optarg, &end, 10);
